@@ -1,0 +1,288 @@
+# depslib dependency file v1.0
+1651914723 source:c:\home\travail\algo\camelup3\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+
+1651926119 source:c:\users\esteb\onedrive\bureau\camelup3\camelup3\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+
+1651936452 source:c:\users\colle\downloads\camelup4\camelup4\camelup3\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+
+1652091558 source:c:\home\travail\algo\camelup4\camelup4\camelup3\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+
+1652092955 source:c:\home\travail\algo\camelupa\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+
+1652117750 source:c:\users\5849200\desktop\camelupa\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+
+1652179794 source:c:\home\travail\algo\camelupaedit\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652174368 c:\home\travail\algo\camelupaedit\types_structures.h
+
+1652179394 source:c:\home\travail\algo\camelupaedit\affichage.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+
+1652179873 source:c:\home\travail\algo\camelupaedit\programmes_outils.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+
+1652179794 c:\home\travail\algo\camelupaedit\programmes_outils.h
+	"types_structures.h"
+
+1652174694 c:\home\travail\algo\camelupaedit\affichage.h
+
+1652177448 source:c:\home\travail\algo\camelupaedit\organisation_partie.c
+	"organisation_partie.h"
+	<time.h>
+
+1652178400 c:\home\travail\algo\camelupaedit\organisation_partie.h
+	"types_structures.h"
+
+1652179394 source:c:\home\travail\algo\camelupaedit\mouvements.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"mouvements.h"
+
+1652177896 c:\home\travail\algo\camelupaedit\mouvements.h
+
+1652179394 source:c:\home\travail\algo\camelupaedit\pari.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"pari.h"
+
+1652178155 c:\home\travail\algo\camelupaedit\pari.h
+	"types_structures.h"
+
+1652179394 source:c:\home\travail\algo\camelupaedit\orgapartie.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652178616 c:\home\travail\algo\camelupaedit\orgapartie.h
+	"types_structures.h"
+
+1652179396 source:c:\home\travail\algo\cameluplpb\camelupaedit\affichage.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+
+1652174370 c:\home\travail\algo\cameluplpb\camelupaedit\types_structures.h
+
+1652179796 c:\home\travail\algo\cameluplpb\camelupaedit\programmes_outils.h
+	"types_structures.h"
+
+1652174696 c:\home\travail\algo\cameluplpb\camelupaedit\affichage.h
+
+1652179796 source:c:\home\travail\algo\cameluplpb\camelupaedit\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652178618 c:\home\travail\algo\cameluplpb\camelupaedit\orgapartie.h
+	"types_structures.h"
+
+1652178156 c:\home\travail\algo\cameluplpb\camelupaedit\pari.h
+	"types_structures.h"
+
+1652177898 c:\home\travail\algo\cameluplpb\camelupaedit\mouvements.h
+
+1652179396 source:c:\home\travail\algo\cameluplpb\camelupaedit\mouvements.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"mouvements.h"
+
+1652179396 source:c:\home\travail\algo\cameluplpb\camelupaedit\orgapartie.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652179396 source:c:\home\travail\algo\cameluplpb\camelupaedit\pari.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"pari.h"
+
+1652179874 source:c:\home\travail\algo\cameluplpb\camelupaedit\programmes_outils.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+
+1652179396 source:c:\home\travail\algo\cameluplpb\cameluplpb\affichage.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+
+1652174370 c:\home\travail\algo\cameluplpb\cameluplpb\types_structures.h
+
+1652179796 c:\home\travail\algo\cameluplpb\cameluplpb\programmes_outils.h
+	"types_structures.h"
+
+1652174696 c:\home\travail\algo\cameluplpb\cameluplpb\affichage.h
+
+1652180421 source:c:\home\travail\algo\cameluplpb\cameluplpb\main.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	<windows.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652178618 c:\home\travail\algo\cameluplpb\cameluplpb\orgapartie.h
+	"types_structures.h"
+
+1652178156 c:\home\travail\algo\cameluplpb\cameluplpb\pari.h
+	"types_structures.h"
+
+1652177898 c:\home\travail\algo\cameluplpb\cameluplpb\mouvements.h
+
+1652179396 source:c:\home\travail\algo\cameluplpb\cameluplpb\mouvements.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"mouvements.h"
+
+1652179396 source:c:\home\travail\algo\cameluplpb\cameluplpb\orgapartie.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652179396 source:c:\home\travail\algo\cameluplpb\cameluplpb\pari.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"pari.h"
+
+1652179874 source:c:\home\travail\algo\cameluplpb\cameluplpb\programmes_outils.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+
+1652357461 source:c:\home\travail\algo\cameluplpb\affichage.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+
+1652361448 c:\home\travail\algo\cameluplpb\types_structures.h
+
+1652186513 c:\home\travail\algo\cameluplpb\programmes_outils.h
+	"types_structures.h"
+
+1652280520 c:\home\travail\algo\cameluplpb\affichage.h
+
+1652360079 source:c:\home\travail\algo\cameluplpb\main.c
+	<windows.h>
+	"OrgaPartie.h"
+
+1652263507 c:\home\travail\algo\cameluplpb\orgapartie.h
+	"types_structures.h"
+
+1652344922 c:\home\travail\algo\cameluplpb\pari.h
+	"types_structures.h"
+
+1652177898 c:\home\travail\algo\cameluplpb\mouvements.h
+
+1652357568 source:c:\home\travail\algo\cameluplpb\mouvements.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"mouvements.h"
+
+1652361664 source:c:\home\travail\algo\cameluplpb\orgapartie.c
+	<stdio.h>
+	<stdlib.h>
+	<time.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"affichage.h"
+	"OrgaPartie.h"
+	"pari.h"
+	"mouvements.h"
+
+1652361448 source:c:\home\travail\algo\cameluplpb\pari.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+	"programmes_outils.h"
+	"pari.h"
+
+1652361370 source:c:\home\travail\algo\cameluplpb\programmes_outils.c
+	<stdio.h>
+	<stdlib.h>
+	"types_structures.h"
+
