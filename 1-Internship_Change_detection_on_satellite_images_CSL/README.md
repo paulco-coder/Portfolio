@@ -11,7 +11,7 @@ This internship took place at the Signal Processing Laboratory of the Centre Spa
 
 The work focused on the **detection of spatio-temporal changes** using **opticzl & SAR (Synthetic Aperture Radar) images** and **unsupervised machine learning**.
 
-I cannot disclose detailed implementation specifics of the change‑detection code. A recommendation letter is included in the repository (see [Section 5 — Recommendation letter](#5-recommendation-letter)) for further context on tasks and skills demonstrated during the internship.
+I cannot disclose detailed implementation specifics of the change‑detection code. A recommendation letter is included in the repository (see ./Recommendation_letter_from_M-Kirkove.pdf) for further context on tasks and skills demonstrated during the internship.
 
 ---
 
@@ -58,6 +58,3 @@ The CSL’s contribution focuses on **developing change detection algorithms** u
             
 ![result example optical image](./Images/result_example.png)
            
-## 5. Recommendation letter
-       
-![recommendation letter](./Images/Recommendation_letter_from_M-Kirkove.png)
