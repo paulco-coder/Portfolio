@@ -1,0 +1,380 @@
+{% extends 'layout.html' %}
+
+{% block title %}Backtest {{ pair_label }} - TradingApp{% endblock %}
+
+{% block content %}
+<h1>Backtest - {{ pair_label }}</h1>
+<p class="text-muted">Configure the bot parameters and launch a quick backtest directly from this page.</p>
+
+<div class="card">
+	<div class="card-body">
+		<form method="post" class="row g-3" autocomplete="off">
+			<input type="hidden" name="symbol_a" value="{{ symbol_a }}">
+			<input type="hidden" name="symbol_b" value="{{ symbol_b }}">
+
+			<div class="col-12 col-md-4">
+				<label for="timeframe" class="form-label">Timeframe</label>
+				<select class="form-select" id="timeframe" name="timeframe" required>
+					{% for entry in timeframes %}
+						<option value="{{ entry.id }}" {% if config.timeframe == entry.id %}selected{% endif %}>{{ entry.label }}</option>
+					{% endfor %}
+				</select>
+			</div>
+
+			<div class="col-12 col-md-4">
+				<label for="window" class="form-label">Window (points)</label>
+				<input type="number" class="form-control" id="window" name="window" min="3" max="2000" step="1" value="{{ config.window }}" required>
+				<div class="form-text">Number of points used when computing the z-score.</div>
+			</div>
+
+			<div class="col-12 col-md-4">
+				<label for="threshold_multiplier" class="form-label">Threshold (×σ)</label>
+				<input type="number" class="form-control" id="threshold_multiplier" name="threshold_multiplier" min="0.1" max="10" step="0.1" value="{{ config.threshold_multiplier }}" required>
+				<div class="form-text">Multiplier applied to the standard deviation.</div>
+			</div>
+
+			<div class="col-12 col-md-4">
+				<label for="exit_threshold" class="form-label">Y - Exit threshold</label>
+				<input type="number" class="form-control" id="exit_threshold" name="exit_threshold" min="0" max="10" step="0.1" value="{{ config.exit_threshold }}">
+				<div class="form-text">Close the position when the z-score is -Y for a short_a / long_b position or +Y for a long_a / short_b position.</div>
+			</div>
+
+			<div class="col-12 col-md-4">
+				<label for="fee_percent" class="form-label">Fees (%)</label>
+				<input type="number" class="form-control" id="fee_percent" name="fee_percent" min="0" max="10" step="0.01" value="{{ config.fee_percent }}">
+				<div class="form-text">Percentage of fees applied to every trade.</div>
+			</div>
+
+			<div class="col-12 col-md-4">
+				<label for="initial_capital" class="form-label">Initial capital ($)</label>
+				<input type="number" class="form-control" id="initial_capital" name="initial_capital" min="10" step="10" value="{{ config.initial_capital }}" required>
+				<div class="form-text">Starting capital used during the backtest.</div>
+			</div>
+
+			<div class="col-12 col-md-4 align-self-end">
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="use_volatility_adjustment" name="use_volatility_adjustment" value="1" {% if config.use_volatility_adjustment %}checked{% endif %}>
+					<label class="form-check-label" for="use_volatility_adjustment">Volatility-adjust position sizing</label>
+				</div>
+				<div class="form-text">Weight long/short position sizes according to recent volatility.</div>
+			</div>
+
+			<div class="col-12 col-md-6">
+				<label for="start_at" class="form-label">Backtest start</label>
+				<input type="datetime-local" class="form-control" id="start_at" name="start_at" value="{{ config.start_at or '' }}">
+				<div class="form-text">Automatically aligned to the selected timeframe.</div>
+			</div>
+
+			<div class="col-12 col-md-6">
+				<label for="end_at" class="form-label">Backtest end</label>
+				<input type="datetime-local" class="form-control" id="end_at" name="end_at" value="{{ config.end_at or '' }}">
+				<div class="form-text">Must be after or equal to the start time once aligned to the timeframe.</div>
+			</div>
+
+			<div class="col-12">
+				<button type="submit" class="btn btn-primary">Save settings</button>
+				<a href="{{ url_for('pair_trading') }}" class="btn btn-outline-secondary ms-2">Back to list</a>
+			</div>
+		</form>
+
+		{% if backtest_error %}
+			<div class="alert alert-danger mt-4" role="alert">{{ backtest_error }}</div>
+		{% elif backtest_result %}
+			<div class="alert alert-success mt-4" role="alert">Backtest completed successfully.</div>
+
+			{% if backtest_result.price_series %}
+			<div class="d-flex justify-content-start mt-3">
+				<button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#priceChartModal">
+					Price chart
+				</button>
+			</div>
+			{% endif %}
+
+			<div class="row mt-3 g-3">
+				<div class="col-12 col-lg-6">
+					<div class="card h-100">
+						<div class="card-header">Summary</div>
+						<div class="card-body">
+							<ul class="list-unstyled mb-0">
+								<li><strong>Initial capital:</strong> {{ backtest_result.summary.initial_capital }} $</li>
+								<li><strong>Final capital:</strong> {{ backtest_result.summary.final_capital }} $</li>
+								<li><strong>Total PnL:</strong> {{ backtest_result.summary.total_pnl }} $</li>
+								<li><strong>Total fees:</strong> {{ backtest_result.summary.total_fees }} $</li>
+								<li><strong>Return:</strong> {{ backtest_result.summary.return_pct }} %</li>
+								<li><strong>Annualized return:</strong> {{ backtest_result.summary.annual_return_pct }} %</li>
+								<li><strong>Trades:</strong> {{ backtest_result.summary.total_trades }} ({{ backtest_result.summary.winning_trades }} winners / {{ backtest_result.summary.losing_trades }} losers)</li>
+								<li><strong>Win rate:</strong> {{ backtest_result.summary.win_rate }} %</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div class="col-12 col-lg-6">
+					<div class="card h-100">
+						<div class="card-header">Trade list</div>
+						<div class="card-body p-0">
+							<div class="table-responsive">
+								<table class="table table-sm mb-0">
+									<thead class="table-light">
+										<tr>
+											<th>Type</th>
+											<th>Entry</th>
+											<th>Exit</th>
+											<th>PnL</th>
+										</tr>
+									</thead>
+									<tbody>
+										{% if backtest_result.trades %}
+											{% for trade in backtest_result.trades %}
+											<tr>
+												<td>{{ trade.trade_type }}</td>
+												<td>
+													<div class="small">{{ trade.entry_time }}</div>
+													<div class="text-muted small">A: {{ trade.entry_price_a }} / B: {{ trade.entry_price_b }}</div>
+													<div class="text-muted small">
+														{% if trade.size_a > 0 %}Long{% else %}Short{% endif %} A: {{ trade.size_a | abs }} $
+														/&nbsp;{% if trade.size_b > 0 %}Long{% else %}Short{% endif %} B: {{ trade.size_b | abs }} $
+													</div>
+												</td>
+												<td>
+													{% if trade.exit_time %}
+														<div class="small">{{ trade.exit_time }}</div>
+														<div class="text-muted small">A: {{ trade.exit_price_a }} / B: {{ trade.exit_price_b }}</div>
+													{% else %}
+														<div class="small text-muted">Still open</div>
+													{% endif %}
+												</td>
+												<td class="fw-semibold {% if trade.pnl > 0 %}text-success{% elif trade.pnl < 0 %}text-danger{% endif %}">{{ trade.pnl }}</td>
+											</tr>
+											{% endfor %}
+										{% else %}
+											<tr>
+												<td colspan="4" class="text-center text-muted">No trades executed.</td>
+											</tr>
+										{% endif %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endif %}
+	</div>
+</div>
+
+{% if backtest_result and backtest_result.price_series %}
+<script id="priceSeriesData" type="application/json">{{ backtest_result.price_series | tojson }}</script>
+<script id="signalsData" type="application/json">{{ backtest_result.signals | tojson }}</script>
+
+<div class="modal fade" id="priceChartModal" tabindex="-1" aria-labelledby="priceChartModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-xl modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="priceChartModalLabel">Normalized prices - {{ pair_label }}</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<canvas id="priceChart" height="360"></canvas>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+	const modalEl = document.getElementById('priceChartModal');
+	if (!modalEl) {
+		return;
+	}
+
+	const priceSeriesDataEl = document.getElementById('priceSeriesData');
+	const signalsDataEl = document.getElementById('signalsData');
+	const priceSeries = priceSeriesDataEl ? JSON.parse(priceSeriesDataEl.textContent) : [];
+	const signals = signalsDataEl ? JSON.parse(signalsDataEl.textContent) : [];
+	let priceChartInstance = null;
+
+	modalEl.addEventListener('shown.bs.modal', function () {
+		if (priceChartInstance || !priceSeries.length) {
+			return;
+		}
+
+		const labels = priceSeries.map(point => point.time);
+		const dataA = priceSeries.map(point => point.price_a);
+		const dataB = priceSeries.map(point => point.price_b);
+		const indexByTime = new Map(labels.map((time, idx) => [time, idx]));
+
+		const entryShortLong = new Array(labels.length).fill(null);
+		const entryLongShort = new Array(labels.length).fill(null);
+		const exitShortLong = new Array(labels.length).fill(null);
+		const exitLongShort = new Array(labels.length).fill(null);
+		const entryShortLongMeta = new Array(labels.length).fill(null);
+		const entryLongShortMeta = new Array(labels.length).fill(null);
+		const exitShortLongMeta = new Array(labels.length).fill(null);
+		const exitLongShortMeta = new Array(labels.length).fill(null);
+
+		signals.forEach(event => {
+			const idx = indexByTime.get(event.time);
+			if (idx === undefined) {
+				return;
+			}
+			const normalizedPrice = event.price_a ?? dataA[idx];
+			if (event.kind === 'enter') {
+				if (event.trade_type === 'short_long') {
+					entryShortLong[idx] = normalizedPrice;
+					entryShortLongMeta[idx] = event;
+				} else {
+					entryLongShort[idx] = normalizedPrice;
+					entryLongShortMeta[idx] = event;
+				}
+			} else if (event.kind === 'exit') {
+				if (event.trade_type === 'short_long') {
+					exitShortLong[idx] = normalizedPrice;
+					exitShortLongMeta[idx] = event;
+				} else {
+					exitLongShort[idx] = normalizedPrice;
+					exitLongShortMeta[idx] = event;
+				}
+			}
+		});
+
+		const ctx = document.getElementById('priceChart');
+		priceChartInstance = new Chart(ctx, {
+			type: 'line',
+			data: {
+				labels,
+				datasets: [
+					{
+						label: '{{ symbol_a }} normalized',
+						data: dataA,
+						borderColor: '#0d6efd',
+						backgroundColor: 'rgba(13, 110, 253, 0.04)',
+						tension: 0.2,
+						pointRadius: 0,
+						borderWidth: 1,
+						order: 0,
+					},
+					{
+						label: '{{ symbol_b }} normalized',
+						data: dataB,
+						borderColor: '#198754',
+						backgroundColor: 'rgba(25, 135, 84, 0.04)',
+						tension: 0.2,
+						pointRadius: 0,
+						borderWidth: 1,
+						order: 0,
+					},
+					{
+						label: 'Entry short/long',
+						data: entryShortLong,
+						borderColor: '#fd7e14',
+						backgroundColor: '#fd7e14',
+						showLine: false,
+						pointRadius: 6,
+						pointHoverRadius: 8,
+						pointStyle: 'triangle',
+						borderWidth: 2,
+						order: 10,
+						customMeta: entryShortLongMeta,
+					},
+					{
+						label: 'Entry long/short',
+						data: entryLongShort,
+						borderColor: '#20c997',
+						backgroundColor: '#20c997',
+						showLine: false,
+						pointRadius: 6,
+						pointHoverRadius: 8,
+						pointStyle: 'triangle',
+						borderWidth: 2,
+						order: 10,
+						customMeta: entryLongShortMeta,
+					},
+					{
+						label: 'Exit short/long',
+						data: exitShortLong,
+						borderColor: '#dc3545',
+						backgroundColor: '#dc3545',
+						showLine: false,
+						pointRadius: 6,
+						pointHoverRadius: 8,
+						pointStyle: 'rectRot',
+						borderWidth: 2,
+						order: 10,
+						customMeta: exitShortLongMeta,
+					},
+					{
+						label: 'Exit long/short',
+						data: exitLongShort,
+						borderColor: '#6f42c1',
+						backgroundColor: '#6f42c1',
+						showLine: false,
+						pointRadius: 6,
+						pointHoverRadius: 8,
+						pointStyle: 'rectRot',
+						borderWidth: 2,
+						order: 10,
+						customMeta: exitLongShortMeta,
+					},
+				],
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				scales: {
+					y: {
+						title: {
+							display: true,
+							text: 'Normalized price',
+						},
+						min: -0.1,
+						max: 1.1,
+					},
+					x: {
+						title: {
+							display: true,
+							text: 'Date',
+						},
+						ticks: {
+							autoSkip: true,
+							maxTicksLimit: 12,
+						},
+					},
+				},
+				plugins: {
+					legend: {
+						position: 'bottom',
+					},
+					tooltip: {
+						callbacks: {
+							label: function(context) {
+								const meta = context.dataset.customMeta ? context.dataset.customMeta[context.dataIndex] : null;
+								if (meta) {
+									const parts = [context.dataset.label];
+									if (typeof meta.z_score !== 'undefined' && meta.z_score !== null) {
+										parts.push(`z=${meta.z_score.toFixed(3)}`);
+									}
+									if (typeof meta.pnl !== 'undefined' && meta.pnl !== null) {
+										parts.push(`PnL=${meta.pnl.toFixed(2)}`);
+									}
+									return parts.join(' | ');
+								}
+								return `${context.dataset.label}: ${context.parsed.y.toFixed(3)}`;
+							},
+						},
+					},
+				},
+			},
+		});
+	});
+
+	modalEl.addEventListener('hidden.bs.modal', function () {
+		if (priceChartInstance) {
+			priceChartInstance.destroy();
+			priceChartInstance = null;
+		}
+	});
+});
+</script>
+{% endif %}
+{% endblock %}

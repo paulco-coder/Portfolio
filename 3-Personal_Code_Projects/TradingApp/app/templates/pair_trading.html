@@ -1,0 +1,729 @@
+{% extends 'layout.html' %}
+
+{% block title %}Pair Trading - TradingApp{% endblock %}
+
+{% block content %}
+<h1>Pair Trading</h1>
+
+<style>
+	/* Fixed column widths */
+	.table-fixed { table-layout: fixed; width: 100%; }
+	.table-fixed th, .table-fixed td { width: calc(100% / 10); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.indicator-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 60px; }
+</style>
+
+<div class="card">
+	<div class="card-body">
+		<form id="add-pair-form" class="row g-3 mb-3 align-items-end" autocomplete="off">
+			<div class="col-12 col-md-3 col-lg-3">
+				<label for="add-pair-symbol-a" class="form-label">Symbol A</label>
+				<input type="text" class="form-control" id="add-pair-symbol-a" name="symbol_a" placeholder="ETH-USD" maxlength="20" required>
+			</div>
+			<div class="col-12 col-md-3 col-lg-3">
+				<label for="add-pair-symbol-b" class="form-label">Symbol B</label>
+				<input type="text" class="form-control" id="add-pair-symbol-b" name="symbol_b" placeholder="ETC-USD" maxlength="20" required>
+			</div>
+			<div class="col-12 col-md-4 col-lg-4">
+				<label class="form-label">Quote currency</label>
+				<div class="form-text">Enter symbols such as <code>ETH-USD</code> or <code>ETH/USDT</code>. They will be normalized automatically.</div>
+			</div>
+			<div class="col-12 col-md-2 col-lg-2 text-md-end">
+				<button type="submit" class="btn btn-primary w-100">Add pair</button>
+			</div>
+		</form>
+		<div id="pair-feedback" class="alert d-none mb-3" role="alert"></div>
+		<div class="row g-3 mb-3">
+			<div class="col-12 col-md-4 col-lg-3">
+				<label for="indicator-window" class="form-label">Window (points)</label>
+				<input type="number" class="form-control" id="indicator-window" name="indicator-window" min="3" max="2000" step="1" value="600">
+			</div>
+			<div class="col-12 col-md-4 col-lg-3">
+				<label for="indicator-threshold" class="form-label">Threshold (×σ)</label>
+				<input type="number" class="form-control" id="indicator-threshold" name="indicator-threshold" min="0.1" max="10" step="0.1" value="2">
+			</div>
+			<div class="col-12 col-md-4 col-lg-3 align-self-end">
+				<div class="form-text">Indicators are computed on demand using the button.</div>
+			</div>
+		</div>
+		<div class="table-responsive">
+			<table class="table table-striped table-hover table-fixed">
+				<thead class="table-light">
+					<tr>
+						<th class="text-center align-middle">Pair</th>
+						<th class="text-center align-middle">Correlation</th>
+						<th class="text-center align-middle">CointScore</th>
+						<th class="text-center align-middle">Parameters</th>
+						<th class="text-center align-middle">6h</th>
+						<th class="text-center align-middle">1h</th>
+						<th class="text-center align-middle">15min</th>
+						<th class="text-center align-middle">5min</th>
+						<th class="text-center align-middle">Indicators</th>
+						<th class="text-center align-middle" style="width: calc(100% / 5);">Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% set rows = table_rows if table_rows is defined and table_rows else [] %}
+					{% if rows %}
+						{% for row in rows %}
+				<tr data-symbol-a="{{ row.symbol_a }}" data-symbol-b="{{ row.symbol_b }}">
+						<td class="text-center align-middle">{{ row.pair_label }}</td>
+						<td class="text-center align-middle">{{ row.correlation }}</td>
+						<td class="text-center align-middle">{{ row.coint_score }}</td>
+							<td class="text-center align-middle" data-role="params">—</td>
+							<td class="text-center align-middle" data-timeframe="6h">—</td>
+							<td class="text-center align-middle" data-timeframe="1h">—</td>
+							<td class="text-center align-middle" data-timeframe="15min">—</td>
+							<td class="text-center align-middle" data-timeframe="5min">—</td>
+							<td class="text-center align-middle">
+								<button type="button" class="btn btn-sm btn-outline-secondary js-show-indicators">Show indicators</button>
+							</td>
+						<td class="text-center align-middle" style="width: calc(100% / 5);">
+							<div class="btn-group" role="group" aria-label="Actions">
+								<a href="{{ url_for('pair_analysis', symbol_a=row.symbol_a, symbol_b=row.symbol_b) }}" class="btn btn-sm btn-outline-primary">Analyze</a>
+								<a href="{{ url_for('pair_backtest', symbol_a=row.symbol_a, symbol_b=row.symbol_b) }}" class="btn btn-sm btn-success">Trade</a>
+								<button type="button" class="btn btn-sm btn-outline-danger js-remove-pair">Remove</button>
+							</div>
+						</td>
+					</tr>
+						{% endfor %}
+					{% else %}
+						<tr>
+							<td colspan="10" class="text-center text-muted align-middle">No data available</td>
+						</tr>
+					{% endif %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>
+
+		<div class="modal fade" id="zscore-modal" tabindex="-1" aria-labelledby="zscoreModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-xl modal-dialog-centered">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title js-chart-title" id="zscoreModalLabel">Z-score</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="small text-muted mb-2 js-chart-meta"></div>
+						<div class="ratio ratio-16x9">
+							<canvas id="zscore-chart"></canvas>
+						</div>
+						<div class="text-muted small mt-3 js-chart-empty d-none">No data available for this window.</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<script>
+	(() => {
+		const indicatorEndpoint = "{{ url_for('pair_indicators') }}";
+		const addPairEndpoint = "{{ url_for('pair_add') }}";
+		const removePairEndpoint = "{{ url_for('pair_remove') }}";
+		const timeframeOrder = ["6h", "1h", "15min", "5min"];
+		const windowInput = document.getElementById("indicator-window");
+		const thresholdInput = document.getElementById("indicator-threshold");
+		const pairFeedback = document.getElementById("pair-feedback");
+		const addPairForm = document.getElementById("add-pair-form");
+		const addPairSymbolAInput = document.getElementById("add-pair-symbol-a");
+		const addPairSymbolBInput = document.getElementById("add-pair-symbol-b");
+
+		const modalElement = document.getElementById("zscore-modal");
+		const chartCanvas = document.getElementById("zscore-chart");
+		const modalTitle = modalElement ? modalElement.querySelector(".js-chart-title") : null;
+		const modalMeta = modalElement ? modalElement.querySelector(".js-chart-meta") : null;
+		const modalEmpty = modalElement ? modalElement.querySelector(".js-chart-empty") : null;
+
+		let zscoreChartInstance = null;
+		let chartPluginRegistered = false;
+
+		const getModalInstance = () => {
+			if (!modalElement || typeof bootstrap === "undefined" || !bootstrap.Modal) {
+				return null;
+			}
+			return bootstrap.Modal.getOrCreateInstance(modalElement);
+		};
+
+		const formatNumber = (value, digits = 2) => {
+			const numeric = typeof value === "number" ? value : Number(value);
+			if (!Number.isFinite(numeric)) {
+				return "—";
+			}
+			return numeric.toFixed(digits);
+		};
+
+		const formatDateTime = (isoString) => {
+			if (!isoString) {
+				return "";
+			}
+			const dateValue = new Date(isoString);
+			if (Number.isNaN(dateValue.getTime())) {
+				return isoString;
+			}
+			return dateValue.toLocaleString();
+		};
+
+		const showFeedback = (message, variant = "success") => {
+			if (!pairFeedback) {
+				return;
+			}
+			if (!message) {
+				pairFeedback.textContent = "";
+				pairFeedback.classList.add("d-none");
+				pairFeedback.classList.remove("alert-success", "alert-danger");
+				return;
+			}
+			pairFeedback.textContent = message;
+			pairFeedback.classList.remove("d-none");
+			pairFeedback.classList.remove("alert-success", "alert-danger");
+			pairFeedback.classList.add(variant === "success" ? "alert-success" : "alert-danger");
+		};
+
+		const zScoreBandsPlugin = {
+			id: "zScoreBands",
+			beforeDraw(chart, _args, pluginOptions) {
+				const zones = pluginOptions?.zones;
+				if (!zones || !zones.length) {
+					return;
+				}
+				const { ctx, chartArea } = chart;
+				const { left, right } = chartArea;
+				const yScale = chart.scales.y;
+				ctx.save();
+				zones.forEach((zone) => {
+					const yStart = yScale.getPixelForValue(zone.from);
+					const yEnd = yScale.getPixelForValue(zone.to);
+					if (!Number.isFinite(yStart) || !Number.isFinite(yEnd)) {
+						return;
+					}
+					const top = Math.min(yStart, yEnd);
+					const height = Math.abs(yEnd - yStart);
+					ctx.fillStyle = zone.color;
+					ctx.fillRect(left, top, right - left, height);
+				});
+				ctx.restore();
+			},
+		};
+
+		const ensureChartInstance = () => {
+			if (!chartCanvas || typeof Chart === "undefined") {
+				return null;
+			}
+			if (!chartPluginRegistered) {
+				Chart.register(zScoreBandsPlugin);
+				chartPluginRegistered = true;
+			}
+			if (zscoreChartInstance) {
+				return zscoreChartInstance;
+			}
+			zscoreChartInstance = new Chart(chartCanvas.getContext("2d"), {
+				type: "line",
+				data: {
+					datasets: [
+						{
+							label: "Z-score",
+							data: [],
+							parsing: false,
+							borderColor: "#0d6efd",
+							backgroundColor: "rgba(13, 110, 253, 0.1)",
+							borderWidth: 2,
+							pointRadius: 0,
+							tension: 0.25,
+						},
+						{
+							label: "+Th",
+							data: [],
+							parsing: false,
+							borderColor: "#dc3545",
+							borderDash: [6, 4],
+							borderWidth: 1,
+							pointRadius: 0,
+							tension: 0,
+							fill: false,
+						},
+						{
+							label: "-Th",
+							data: [],
+							parsing: false,
+							borderColor: "#198754",
+							borderDash: [6, 4],
+							borderWidth: 1,
+							pointRadius: 0,
+							tension: 0,
+							fill: false,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					scales: {
+						x: {
+							type: "time",
+							time: {
+								tooltipFormat: "dd MMM HH:mm",
+								displayFormats: {
+									minute: "HH:mm",
+									hour: "HH:mm",
+								},
+							},
+							ticks: {
+								maxTicksLimit: 12,
+							},
+						},
+						y: {
+							ticks: {
+								stepSize: 0.5,
+							},
+							suggestedMin: -3,
+							suggestedMax: 3,
+						},
+					},
+					plugins: {
+						legend: {
+							display: true,
+						},
+						tooltip: {
+							callbacks: {
+								label(context) {
+									return `z=${formatNumber(context.parsed.y)}`;
+								},
+							},
+						},
+						zScoreBands: {
+							zones: [],
+						},
+					},
+					elements: {
+						line: {
+							spanGaps: true,
+						},
+					},
+				},
+			});
+			return zscoreChartInstance;
+		};
+
+		const computeZones = (values, thresholdValue) => {
+			const numericValues = values.filter((value) => Number.isFinite(value));
+			if (Number.isFinite(thresholdValue)) {
+				numericValues.push(thresholdValue, -thresholdValue);
+			}
+			const maxValue = numericValues.length ? Math.max(...numericValues, 2) : 2;
+			const minValue = numericValues.length ? Math.min(...numericValues, -2) : -2;
+			const zones = [];
+			if (maxValue > 2) {
+				zones.push({ from: 2, to: maxValue, color: "rgba(220, 53, 69, 0.28)" });
+			}
+			zones.push({ from: 1.5, to: 2, color: "rgba(220, 53, 69, 0.18)" });
+			zones.push({ from: 1, to: 1.5, color: "rgba(248, 215, 218, 0.4)" });
+			zones.push({ from: -1, to: 1, color: "rgba(255, 255, 255, 0.65)" });
+			zones.push({ from: -1.5, to: -1, color: "rgba(209, 231, 221, 0.5)" });
+			zones.push({ from: -2, to: -1.5, color: "rgba(144, 238, 144, 0.35)" });
+			if (minValue < -2) {
+				zones.push({ from: minValue, to: -2, color: "rgba(40, 167, 69, 0.25)" });
+			}
+			return zones;
+		};
+
+		if (addPairForm) {
+			addPairForm.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				showFeedback("");
+				const submitButton = addPairForm.querySelector('button[type="submit"]');
+				const originalLabel = submitButton ? submitButton.innerHTML : "";
+				const symbolAValue = addPairSymbolAInput && typeof addPairSymbolAInput.value === "string" ? addPairSymbolAInput.value.trim() : "";
+				const symbolBValue = addPairSymbolBInput && typeof addPairSymbolBInput.value === "string" ? addPairSymbolBInput.value.trim() : "";
+				if (!symbolAValue || !symbolBValue) {
+					showFeedback("Please provide both symbols.", "danger");
+					return;
+				}
+				if (submitButton) {
+					submitButton.disabled = true;
+					submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+				}
+				try {
+					const response = await fetch(addPairEndpoint, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ symbol_a: symbolAValue, symbol_b: symbolBValue }),
+					});
+					const result = await response.json().catch(() => ({}));
+					if (!response.ok) {
+						throw new Error(result?.error || "Unable to add the pair");
+					}
+					window.location.reload();
+				} catch (error) {
+					const message = error instanceof Error ? error.message : "Error while adding the pair";
+					showFeedback(message, "danger");
+				} finally {
+					if (submitButton) {
+						submitButton.disabled = false;
+						submitButton.innerHTML = originalLabel;
+					}
+				}
+			});
+		}
+
+		const updateZScoreChart = (chartPayload, pairLabel, timeframeLabel) => {
+			const modalInstance = getModalInstance();
+			if (!modalInstance) {
+				return;
+			}
+
+			const chartInstance = ensureChartInstance();
+			const rawPoints = Array.isArray(chartPayload?.points) ? chartPayload.points : [];
+			const parsedPoints = rawPoints
+				.map((point) => {
+					const timeValue = point?.time ? new Date(point.time) : null;
+					const numeric = Number(point?.z_score);
+					if (!timeValue || Number.isNaN(timeValue.getTime()) || !Number.isFinite(numeric)) {
+						return null;
+					}
+					return { x: timeValue, y: numeric };
+				})
+				.filter((point) => point !== null);
+
+			const effectiveLabel = timeframeLabel || chartPayload?.label || chartPayload?.timeframe || "";
+			const xScale = chartInstance ? chartInstance.options.scales.x : null;
+			const timeUnits = {
+				"5min": "minute",
+				"15min": "minute",
+				"1h": "hour",
+				"6h": "day",
+			};
+			if (xScale && xScale.time) {
+				xScale.time.unit = timeUnits[effectiveLabel] || undefined;
+			}
+
+			if (!chartInstance || parsedPoints.length === 0) {
+				if (xScale) {
+					xScale.min = undefined;
+					xScale.max = undefined;
+				}
+				if (modalMeta) {
+					const message = effectiveLabel
+						? `No data available for ${effectiveLabel}.`
+						: "No data available to plot the z-score.";
+					modalMeta.textContent = message;
+				}
+				if (modalEmpty) {
+					modalEmpty.classList.remove("d-none");
+				}
+				if (modalTitle) {
+					modalTitle.textContent = effectiveLabel
+						? `Z-score ${effectiveLabel} — ${pairLabel}`
+						: `Z-score — ${pairLabel}`;
+				}
+				modalInstance.show();
+				return;
+			}
+
+			const values = parsedPoints.map((point) => point.y);
+			const thresholdZ = Number(chartPayload?.threshold_zscore);
+			const thresholdMultiplier = Number(chartPayload?.threshold_multiplier);
+			let thresholdValue = Number.isFinite(thresholdZ) ? thresholdZ : thresholdMultiplier;
+			if (!Number.isFinite(thresholdValue)) {
+				thresholdValue = 2;
+			}
+			const maxValue = values.length ? Math.max(...values, thresholdValue) : thresholdValue;
+			const minValue = values.length ? Math.min(...values, -thresholdValue) : -thresholdValue;
+			const multiplierText = Number.isFinite(thresholdMultiplier) ? formatNumber(thresholdMultiplier) : "—";
+			const thresholdDisplay = formatNumber(thresholdValue);
+			const intervalSeconds = Number(chartPayload?.interval_seconds);
+			const pointsUsedRaw = Number(chartPayload?.points_used);
+			const pointsUsed = Number.isFinite(pointsUsedRaw) && pointsUsedRaw > 0 ? pointsUsedRaw : parsedPoints.length;
+			const requestedWindow = Number(chartPayload?.window_requested);
+			let horizonPoints = pointsUsed;
+			if (Number.isFinite(requestedWindow) && requestedWindow > 1) {
+				horizonPoints = Math.max(requestedWindow, pointsUsed);
+			}
+			const lastPoint = parsedPoints[parsedPoints.length - 1];
+			const lastTime = lastPoint?.x instanceof Date ? lastPoint.x : null;
+			let minTime = parsedPoints.length ? parsedPoints[0].x : null;
+			if (Number.isFinite(intervalSeconds) && intervalSeconds > 0 && lastTime && Number.isFinite(horizonPoints) && horizonPoints > 1) {
+				const spanMs = intervalSeconds * 1000 * (horizonPoints - 1);
+				minTime = new Date(lastTime.getTime() - spanMs);
+			}
+			if (xScale) {
+				if (minTime && lastTime) {
+					xScale.min = minTime;
+					xScale.max = lastTime;
+				} else {
+					xScale.min = undefined;
+					xScale.max = undefined;
+				}
+			}
+
+			chartInstance.data.datasets[0].data = parsedPoints;
+			chartInstance.data.datasets[0].label = effectiveLabel ? `Z-score ${effectiveLabel}` : "Z-score";
+
+			const thresholdLine = parsedPoints.map((point) => ({ x: point.x, y: thresholdValue }));
+			const thresholdNegativeLine = parsedPoints.map((point) => ({ x: point.x, y: -thresholdValue }));
+			chartInstance.data.datasets[1].data = thresholdLine;
+			chartInstance.data.datasets[1].label = `+Th (${thresholdDisplay})`;
+			chartInstance.data.datasets[2].data = thresholdNegativeLine;
+			chartInstance.data.datasets[2].label = `-Th (${thresholdDisplay})`;
+
+			const suggestedMax = Math.max(thresholdValue + 0.5, maxValue + 0.5, 2.5);
+			const suggestedMin = Math.min(-thresholdValue - 0.5, minValue - 0.5, -2.5);
+			chartInstance.options.scales.y.suggestedMax = suggestedMax;
+			chartInstance.options.scales.y.suggestedMin = suggestedMin;
+			chartInstance.options.plugins.zScoreBands.zones = computeZones(values, thresholdValue);
+
+			if (modalMeta) {
+				const stats = [
+					`Mean spread: ${formatNumber(chartPayload?.mean_spread, 4)}`,
+					`Std spread: ${formatNumber(chartPayload?.std_spread, 4)}`,
+					`Th (×σ): ${multiplierText}`,
+					`Th (z): ${thresholdDisplay}`,
+					`Points: ${chartPayload?.points_used ?? parsedPoints.length}`,
+				];
+				const start = chartPayload?.range?.start ? formatDateTime(chartPayload.range.start) : null;
+				const end = chartPayload?.range?.end ? formatDateTime(chartPayload.range.end) : null;
+				if (start && end) {
+					stats.push(`Plage: ${start} → ${end}`);
+				}
+				modalMeta.textContent = stats.join(" • ");
+			}
+			if (modalEmpty) {
+				modalEmpty.classList.add("d-none");
+			}
+			if (modalTitle) {
+				modalTitle.textContent = effectiveLabel
+					? `Z-score ${effectiveLabel} — ${pairLabel}`
+					: `Z-score — ${pairLabel}`;
+			}
+
+			chartInstance.update();
+			modalInstance.show();
+		};
+
+		const renderIndicatorCell = (cell, indicator, chartData, pairLabel, timeframeLabel) => {
+			cell.innerHTML = "";
+			const badge = document.createElement("span");
+			badge.classList.add("badge", "indicator-badge");
+			const label = indicator && indicator.signal ? indicator.signal : "neutral";
+			const isActive = indicator && indicator.signal && indicator.signal !== "neutral";
+			badge.classList.add(isActive ? "bg-success" : "bg-secondary");
+			badge.textContent = label;
+			cell.appendChild(badge);
+
+			if (indicator) {
+				const details = document.createElement("div");
+				details.classList.add("small", "text-muted", "mt-1");
+				const parts = [];
+				if (typeof indicator.z_score === "number") {
+					parts.push(`z=${formatNumber(indicator.z_score)}`);
+				}
+				if (parts.length) {
+					details.textContent = parts.join(" • ");
+					cell.appendChild(details);
+				}
+			}
+
+			const hasChart = Boolean(chartData);
+			const chartButton = document.createElement("button");
+			chartButton.type = "button";
+			chartButton.classList.add("btn", "btn-sm", hasChart ? "btn-outline-primary" : "btn-outline-secondary", "mt-2");
+			// Reduce visual size: smaller font and tighter padding, keep btn-sm semantics
+			chartButton.style.fontSize = "0.75rem";
+			chartButton.style.padding = "0.18rem 0.4rem";
+			chartButton.textContent = "Chart";
+			const timeframeLabelText = timeframeLabel ? ` ${timeframeLabel}` : "";
+			chartButton.title = hasChart
+				? `Show chart${timeframeLabelText}`.trim()
+				: "Not enough data to render the chart";
+			chartButton.addEventListener("click", () => {
+				updateZScoreChart(hasChart ? chartData : null, pairLabel, timeframeLabel);
+			});
+			cell.appendChild(chartButton);
+		};
+
+		const removeButtons = document.querySelectorAll(".js-remove-pair");
+		removeButtons.forEach((button) => {
+			button.addEventListener("click", async () => {
+				const row = button.closest("tr");
+				if (!row) {
+					return;
+				}
+				const symbolA = row.dataset.symbolA;
+				const symbolB = row.dataset.symbolB;
+				if (!symbolA || !symbolB) {
+					showFeedback("Unable to determine which pair to remove.", "danger");
+					return;
+				}
+				const pairLabel = row.querySelector("td:first-child")?.textContent?.trim() || `${symbolA} / ${symbolB}`;
+				if (!window.confirm(`Remove pair ${pairLabel}?`)) {
+					return;
+				}
+				showFeedback("");
+				const originalContent = button.innerHTML;
+				button.disabled = true;
+				button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+				try {
+					const response = await fetch(removePairEndpoint, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify({ symbol_a: symbolA, symbol_b: symbolB }),
+					});
+					const result = await response.json().catch(() => ({}));
+					if (!response.ok) {
+						throw new Error(result?.error || "Unable to remove the pair");
+					}
+					window.location.reload();
+				} catch (error) {
+					const message = error instanceof Error ? error.message : "Error while removing the pair";
+					showFeedback(message, "danger");
+				} finally {
+					button.disabled = false;
+					button.innerHTML = originalContent;
+				}
+			});
+		});
+
+		const showButtons = document.querySelectorAll(".js-show-indicators");
+		showButtons.forEach((button) => {
+			button.addEventListener("click", async () => {
+				const row = button.closest("tr");
+				if (!row) {
+					return;
+				}
+
+				const paramsCell = row.querySelector('[data-role="params"]');
+				const pairLabelFromRow = row.querySelector("td:first-child")?.textContent?.trim();
+
+				let windowSize = parseInt(windowInput.value, 10);
+				if (!Number.isFinite(windowSize)) {
+					windowSize = 600;
+				}
+				windowSize = Math.min(Math.max(windowSize, 3), 2000);
+				windowInput.value = windowSize;
+
+				let threshold = parseFloat(thresholdInput.value);
+				if (!Number.isFinite(threshold)) {
+					threshold = 2;
+				}
+				threshold = Math.min(Math.max(threshold, 0.1), 10);
+				thresholdInput.value = threshold;
+
+				const payload = {
+					symbol_a: row.dataset.symbolA,
+					symbol_b: row.dataset.symbolB,
+					window: windowSize,
+					threshold_multiplier: threshold,
+				};
+
+				const originalContent = button.innerHTML;
+				button.disabled = true;
+				button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+				if (paramsCell) {
+					paramsCell.textContent = "...";
+				}
+
+				const markCellsAsError = (message) => {
+					timeframeOrder.forEach((tf) => {
+						const cell = row.querySelector(`td[data-timeframe="${tf}"]`);
+						if (!cell) {
+							return;
+						}
+						cell.innerHTML = "";
+						const badge = document.createElement("span");
+						badge.classList.add("badge", "bg-danger", "indicator-badge");
+						badge.textContent = "error";
+						badge.title = message;
+						cell.appendChild(badge);
+					});
+				};
+
+				try {
+					const response = await fetch(indicatorEndpoint, {
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+						},
+						body: JSON.stringify(payload),
+					});
+
+					if (!response.ok) {
+						let errMessage = "Unknown error";
+						try {
+							const problem = await response.json();
+							if (problem && problem.error) {
+								errMessage = problem.error;
+							}
+						} catch (_) {}
+						throw new Error(errMessage);
+					}
+
+					const payloadJson = await response.json();
+					const pairLabel = payloadJson.pair_label || pairLabelFromRow || `${payload.symbol_a} / ${payload.symbol_b}`;
+					const indicatorMap = new Map();
+					if (Array.isArray(payloadJson.indicators)) {
+						payloadJson.indicators.forEach((indicator) => {
+							if (indicator && indicator.timeframe) {
+								indicatorMap.set(indicator.timeframe, indicator);
+							}
+						});
+					}
+					const chartsMap = new Map();
+					if (payloadJson.charts && typeof payloadJson.charts === "object") {
+						Object.entries(payloadJson.charts).forEach(([tf, chartPayload]) => {
+							if (chartPayload && typeof chartPayload === "object") {
+								chartsMap.set(tf, chartPayload);
+							}
+						});
+					}
+					if (paramsCell) {
+						const summaryParts = [];
+						const thresholdValue = Number(payloadJson.threshold_multiplier);
+						summaryParts.push(`<div class="small text-muted">th=${formatNumber(thresholdValue)}</div>`);
+						const rawWindow = payloadJson.window;
+						const windowNumber = Number(rawWindow);
+						const windowDisplay = Number.isFinite(windowNumber) ? windowNumber : (rawWindow ?? "—");
+						summaryParts.push(`<div class="small text-muted">window=${windowDisplay}</div>`);
+						const pointsBreakdown = [];
+						timeframeOrder.forEach((tf) => {
+							const indicator = indicatorMap.get(tf);
+							if (indicator && typeof indicator.points_used === "number") {
+								pointsBreakdown.push(`${tf}=${indicator.points_used}`);
+							}
+						});
+						// if (pointsBreakdown.length) {
+						// 	summaryParts.push(`<div class="small text-muted">pts: ${pointsBreakdown.join(" • ")}</div>`);
+						// }
+						paramsCell.innerHTML = summaryParts.join("");
+					}
+
+					timeframeOrder.forEach((tf) => {
+						const cell = row.querySelector(`td[data-timeframe="${tf}"]`);
+						if (!cell) {
+							return;
+						}
+						const indicator = indicatorMap.get(tf);
+						const chartPayload = chartsMap.get(tf) || null;
+						renderIndicatorCell(cell, indicator || null, chartPayload, pairLabel, tf);
+					});
+				} catch (error) {
+					console.error("Failed to fetch indicators", error);
+					markCellsAsError(error instanceof Error ? error.message : "Error while loading indicators");
+					if (paramsCell) {
+						paramsCell.textContent = "error";
+					}
+				} finally {
+					button.disabled = false;
+					button.innerHTML = originalContent;
+				}
+			});
+		});
+	})();
+</script>
+
+{% endblock %}

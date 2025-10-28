@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\colle\\workflow\\PortfolioCV\\3-Personnal_Code_Projects\\Unity_Simple_Minecraft_game\\UnityCode\\Assembly-CSharp.csproj",
+      "projectUniqueName": "C:\\Users\\colle\\workflow\\PortfolioCV\\3-Personal_Code_Projects\\Unity_Simple_Minecraft_game\\UnityCode\\Assembly-CSharp.csproj",
       "projectName": "Assembly-CSharp",
-      "projectPath": "C:\\Users\\colle\\workflow\\PortfolioCV\\3-Personnal_Code_Projects\\Unity_Simple_Minecraft_game\\UnityCode\\Assembly-CSharp.csproj",
+      "projectPath": "C:\\Users\\colle\\workflow\\PortfolioCV\\3-Personal_Code_Projects\\Unity_Simple_Minecraft_game\\UnityCode\\Assembly-CSharp.csproj",
       "packagesPath": "C:\\Users\\colle\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\colle\\workflow\\PortfolioCV\\3-Personnal_Code_Projects\\Unity_Simple_Minecraft_game\\UnityCode\\Temp\\obj\\Debug\\Assembly-CSharp\\",
+      "outputPath": "C:\\Users\\colle\\workflow\\PortfolioCV\\3-Personal_Code_Projects\\Unity_Simple_Minecraft_game\\UnityCode\\Temp\\obj\\Debug\\Assembly-CSharp\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\colle\\AppData\\Roaming\\NuGet\\NuGet.Config",

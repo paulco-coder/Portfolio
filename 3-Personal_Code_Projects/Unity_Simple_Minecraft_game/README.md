@@ -2,6 +2,8 @@
 
 A minimalist Minecraft-like prototype. This document explains the project layout, key systems.
 
+![Simple Minecraft](./myMinecraft.png)
+
 ## Controls
 
 - `W / A / S / D` or `Z / Q / S / D` (AZERTY) to move.
@@ -16,7 +18,7 @@ A minimalist Minecraft-like prototype. This document explains the project layout
 
 ## Core Systems
 
-### Procedural Chunk Generation (`Assets/Scripts/TerrainGenerator.cs`)
+### Generation (`Assets/Scripts/TerrainGenerator.cs`)
 - Uses Perlin noise to determine column heights inside a configurable chunk footprint.
 - Creates and parents cubes directly under the generator object for easy cleanup and batching.
 - Selects materials per layer: grass on top, dirt beneath, wood as a fallback base.

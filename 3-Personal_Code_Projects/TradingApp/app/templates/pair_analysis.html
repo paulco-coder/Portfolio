@@ -1,0 +1,139 @@
+{% extends 'layout.html' %}
+
+{% block title %}Analysis {{ pair_label }} - TradingApp{% endblock %}
+
+{% block content %}
+<h1>Analysis {{ pair_label }}</h1>
+
+<p>
+    <a href="{{ url_for('pair_trading') }}" class="btn btn-sm btn-outline-secondary">&larr; Back</a>
+</p>
+
+{% if not series_a_full and not series_b_full %}
+<div class="alert alert-warning" role="alert">
+    No data available for this pair.
+</div>
+{% else %}
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header">{{ symbol_a }} - Price (full history)</div>
+            <div class="card-body">
+                <canvas id="chart-a-full" height="320"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header">{{ symbol_b }} - Price (full history)</div>
+            <div class="card-body">
+                <canvas id="chart-b-full" height="320"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header">{{ symbol_a }} - Price (last 12 hours)</div>
+            <div class="card-body">
+                <canvas id="chart-a-recent" height="320"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="card">
+            <div class="card-header">{{ symbol_b }} - Price (last 12 hours)</div>
+            <div class="card-body">
+                <canvas id="chart-b-recent" height="320"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const seriesAFull = JSON.parse('{{ series_a_full | tojson | safe }}');
+    const seriesARecent = JSON.parse('{{ series_a_recent | tojson | safe }}');
+    const seriesBFull = JSON.parse('{{ series_b_full | tojson | safe }}');
+    const seriesBRecent = JSON.parse('{{ series_b_recent | tojson | safe }}');
+
+    function toChartData(series) {
+        return {
+            labels: series.map(point => new Date(point.time).toLocaleString()),
+            datasets: [{
+                label: 'Price',
+                data: series.map(point => point.price),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                fill: true,
+                tension: 0.2,
+                pointRadius: 0,
+            }],
+        };
+    }
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                ticks: {
+                    maxTicksLimit: 8,
+                },
+            },
+            y: {
+                ticks: {
+                    callback: value => value.toFixed(2),
+                },
+            },
+        },
+        plugins: {
+            legend: {
+                display: false,
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                callbacks: {
+                    label: context => `${context.dataset.label}: ${context.parsed.y.toFixed(4)}`,
+                },
+            },
+        },
+    };
+
+    if (seriesAFull.length) {
+        new Chart(document.getElementById('chart-a-full'), {
+            type: 'line',
+            data: toChartData(seriesAFull),
+            options,
+        });
+    }
+
+    if (seriesBFull.length) {
+        new Chart(document.getElementById('chart-b-full'), {
+            type: 'line',
+            data: toChartData(seriesBFull),
+            options,
+        });
+    }
+
+    if (seriesARecent.length) {
+        new Chart(document.getElementById('chart-a-recent'), {
+            type: 'line',
+            data: toChartData(seriesARecent),
+            options,
+        });
+    }
+
+    if (seriesBRecent.length) {
+        new Chart(document.getElementById('chart-b-recent'), {
+            type: 'line',
+            data: toChartData(seriesBRecent),
+            options,
+        });
+    }
+</script>
+{% endblock %}
