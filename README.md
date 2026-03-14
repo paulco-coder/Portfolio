@@ -25,39 +25,26 @@ Significant collaborative engineering work conducted during my studies at ESTACA
 
 - **In-Orbit Maintenance Project - ALTEN (2023-2024):** Satellite servicing mission design with trajectory optimization and docking systems
 - **SPACE OASIS - The Spring Institute (2024-2025):** Bioregenerative life-support system for orbital habitats
-- **Autonomous Space Drone Navigation Module - InfinitySpaceProviders (2025-2026):** Autonomous systems for orbital inspection and servicing
+- **Autonomous Space Drone Navigation Module - InfinitySpaceProviders (2025-2026):** Autonomous navigation module for embedded space drones for inspection and servicing
 
 ### 3. Personal Code Projects (3-Personal_Code_Projects/)
 
 Independent projects demonstrating technical depth and creative problem-solving:
 
-- **Trading Application Development:** Financial software implementation
-- **Unity Simple Minecraft Game:** Interactive 3D environment with complete game mechanics
+- **Kerbal Space Program Mission Planning:** Detailed mission planning, orbital mechanics calculations, and execution for a robotic Mun mission
+- **Trading Application Development:** Comprehensive cryptocurrency pair trading platform with backtesting and analysis tools
+- **Unity Simple Minecraft Game:** Interactive 3D voxel sandbox environment with complete game mechanics
 
 ### 4. Small Code Projects (4-Small_Code_Projects/)
 
 Focused implementations showcasing specific technical skills:
 
-- **Game in C - Camel Up (2022):** Strategic game implementation in C
-- **Orbital Parameters Determination:** Computational orbital mechanics analysis
-- **Satellite Image Classification:** machine learning application using CNNs
+- **Game in C - Camel Up (2022):** Strategic board game adaptation implemented in C
+- **Orbital Parameters Determination:** Python tool for computing orbital elements from state vectors
+- **Satellite Image Classification:** Machine learning application using CNNs for satellite imagery
 
+### 5. Music Projects (5-Musics/)
 
-## Key Competencies
+Creative works and musical compositions:
 
-### Technical Domains
-
-- **Aerospace & Space Systems:** Orbital mechanics, trajectory planning, satellite design
-- **Software Architecture:** Real-time systems, embedded software, distributed algorithms
-- **Simulation & Modeling:** GMAT, Simulink, ANSYS, SolidWorks, 3DEXPERIENCE
-- **Data & AI:** Python, machine learning, computer vision, image processing
-- **Game Development:** Unity3D, C#, interactive 3D environments
-
-### Tools & Frameworks
-
-- **CAD/Simulation:** SolidWorks, 3DEXPERIENCE, GMAT
-- **Development:** Visual Studio Code, Git
-- **Data Science:** Jupyter, NumPy, Pandas, scikit-learn, TensorFlow
-- **Game Engines:** Unity3D
-
-*Last Updated: October 2025*
+- **Paulco - First Release:** Original music available on major streaming platforms (Spotify, Deezer, Apple Music, etc.)
